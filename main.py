@@ -3,17 +3,15 @@ import requests
 import os
 from fastapi.middleware.cors import CORSMiddleware
 
-from pydantic import BaseModel
 
-app = FastAPI()
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # とりあえず全許可（あとで絞れる）
+    allow_origins=["*"],        # とりあえず全部許可（後で絞れる）
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["*"],        # OPTIONS/POST/GET 全部許可
+    allow_headers=["*"],        # Content-Type など許可
 )
 
 
