@@ -19,16 +19,11 @@ app.add_middleware(
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 def call_gemini(prompt: str):
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
-
-    data = {
-        "contents": [
-            {"parts": [{"text": prompt}]}
-        ]
-    }
-
-    r = requests.post(url, json=data)
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
+    data = {"contents": [{"parts": [{"text": prompt}]}]}
+    r = requests.post(url, json=data, timeout=60)
     return r.json()
+
 
 # ========= データモデル =========
 class Question(BaseModel):
