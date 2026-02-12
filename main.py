@@ -1,73 +1,73 @@
 from fastapi import FastAPI
 import requests
 import os
-from fastapi.middleware.cors import CORSMiddleware
-
+from pydantic import BaseModel
 
 app = FastAPI()
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],        # とりあえず全部許可（後で絞れる）
-    allow_credentials=True,
-    allow_methods=["*"],        # OPTIONS/POST/GET 全部許可
-    allow_headers=["*"],        # Content-Type など許可
-)
+# ==============================
+# 🔑 環境変数（Renderで設定）
+# ==============================
 
-
-# Gemini API Key（Renderで設定）
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+DEFAULT_AI_NAME = os.getenv("AI_NAME", "TSURUKAME CORE")
+
+# ==============================
+# 📦 データモデル
+# ==============================
+
+class AIRequest(BaseModel):
+    text: str
+    user_id: str | None = None
+    ai_name: str | None = None   # ← ユーザー別に上書き可能
+
+# ==============================
+# 🌌 Gemini 呼び出し関数
+# ==============================
 
 def call_gemini(prompt: str):
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
-    data = {"contents": [{"parts": [{"text": prompt}]}]}
-    r = requests.post(url, json=data, timeout=60)
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+
+    data = {
+        "contents": [
+            {"parts": [{"text": prompt}]}
+        ]
+    }
+
+    r = requests.post(url, json=data)
     return r.json()
 
-
-# ========= データモデル =========
-class Question(BaseModel):
-    text: str
-
-# ========= API =========
+# ==============================
+# 🌐 API
+# ==============================
 
 @app.get("/")
 def root():
-    return {"status": "tsuruta-ai online"}
+    return {"status": f"{DEFAULT_AI_NAME} online"}
 
 # 🧠 思考AI
 @app.post("/ai")
-def ai(q: Question):
+def ai(req: AIRequest):
+
+    ai_name = req.ai_name if req.ai_name else DEFAULT_AI_NAME
+
     system_prompt = f"""
-あなたは「つるたAI」。
+あなたは「{ai_name}」。
 ユーザーの思考を拡張し、未来を示すAI。
 
+ユーザーID: {req.user_id}
+
 ユーザー入力:
-{q.text}
+{req.text}
 """
+
     return call_gemini(system_prompt)
 
-# 👤 プロファイル推定AI（年齢・性別）
+# 👤 プロファイル推定AI
 @app.post("/profile")
-def profile(q: Question):
+def profile(req: AIRequest):
+
     prompt = f"""
 次の文章から年齢層と性別を推定し、JSONだけで返せ。
 例:
 {{"age":"20s","gender":"male"}}
-
-文章:
-{q.text}
-"""
-    return call_gemini(prompt)
-
-# ⚖️ 判断AI（分身AI）
-@app.post("/judge")
-def judge(q: Question):
-    prompt = f"""
-あなたはユーザーの分身AI。
-次の問いに対して最適な判断を短く出せ。
-
-問い:
-{q.text}
-"""
-    return call_gemini(prompt)
