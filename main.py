@@ -71,3 +71,9 @@ def profile(req: AIRequest):
 次の文章から年齢層と性別を推定し、JSONだけで返せ。
 例:
 {{"age":"20s","gender":"male"}}
+
+文章:
+{req.text}
+"""
+
+    return call_gemini(prompt)
