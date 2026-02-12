@@ -1,9 +1,21 @@
 from fastapi import FastAPI
 import requests
 import os
+from fastapi.middleware.cors import CORSMiddleware
+
 from pydantic import BaseModel
 
 app = FastAPI()
+app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # とりあえず全許可（あとで絞れる）
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 # Gemini API Key（Renderで設定）
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
